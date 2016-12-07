@@ -1,0 +1,31 @@
+#!/bin/bash
+
+source_dir="${1:?App source directory is required first arg}"
+output_dir="${2:?Build output directory is required second arg}"
+
+echo 1 > "$output_dir/exitcode"
+
+exec > >(tee "$output_dir/output_log.txt")
+exec 2>&1
+
+log:date-time() {
+  date -u +"%Y-%m-%dT%H:%M:%SZ"
+}
+
+main() {
+  log:date-time > "$output_dir/starttime"
+  [[ -e deploy_output/applicationurl ]] && APPLICATION_URL=$(cat deploy_output/applicationurl) || APPLICATION_URL='' 
+  (
+    set -ex
+    task
+  )
+  cp -pr "$source_dir" "$output_dir/app"
+  log:date-time > "$output_dir/endtime"
+  echo 0  > "$output_dir/exitcode"
+}
+
+die() { echo "$@" 1>&2 ; exit 1; }
+
+task() {
+  die "Please define the function: 'task'"
+}
